@@ -1,0 +1,33 @@
+.breed-select {
+  width: 300;
+  margin-bottom: 20px;
+}
+
+.ss-main.breed-select {
+  width: 300;
+}
+
+.error {
+  color: #ff3d00;
+  font-size: 20px;
+}
+
+.js-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+
+  white-space: nowrap;
+  clip-path: inset(100%);
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+}
+
+.cat {
+  width: auto;
+  height: 300px;
+  display: block;
+}

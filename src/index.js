@@ -1,88 +1,83 @@
-import { fetchBreeds, fetchCatByBreed } from './cat-api';
-
-
-
+import axios from "axios";
+import { fetchBreeds, fetchCatByBreed } from "./js/cat-api";
+import Notiflix from 'notiflix';
+import SlimSelect from 'slim-select';
+import 'slim-select/dist/slimselect.css';
 
 const refs = {
-  selectEl: document.querySelector(".breed-select"),
-  catInfoEl: document.querySelector('.cat-info'),
-  loaderEl: document.querySelector(".loader"),
-  errorEl: document.querySelector(".error"),
-};
-
-function showLoader() {
-  refs.loaderEl.style.display = "block";
-  refs.selectEl.style.display = "none";
-  refs.catInfoEl.style.display = "none";
-}
-
-function hideLoader() {
-  refs.loaderEl.style.display = "none";
-  refs.selectEl.style.display = "block";
-  refs.catInfoEl.style.display = "block";
-}
-
-function showError(message) {
-  refs.errorEl.textContent = message;
-}
-
-function clearError() {
-  refs.errorEl.textContent = "";
+    catBreedsEl: document.querySelector('.breed-select'),
+    catInfoWrapper: document.querySelector('.cat-info'),
+    loader: document.querySelector('.loader-text'),
+    error: document.querySelector('.error'),
+    catSlimSelectWrapper: document.querySelector('.ss-main.breed-select'),
 }
 
 
+function getCatBreed(cat) {
+    return `<option value="${cat.id}">${cat.name}</option>`;
+}
 
-clearError();
-showLoader();
-fetchBreeds().then((data) => {
-  if (data) {
-    data.forEach((breed) => {
-      const option = document.createElement("option");
-      option.value = breed.id;
-      option.textContent = breed.name;
-      refs.selectEl.appendChild(option);
-    });
-  } else {
-    throw new Error("Кот не найден");
-  }
-  hideLoader();
-})
-  .catch((err) => {
-    showError(err.message);
-    hideLoader();
-  });
-
-
-
-
-export const onSelectElChange = (event) => {
-  const selectedAnimal = event.target.value;
-  clearError();
-  showLoader();
-  fetchCatByBreed(selectedAnimal).then((data) => {
-    if (data) {
-      const catImageUrl = data[0].url;
-      const catName = data[0].breeds[0].name;
-      const catDescr = data[0].breeds[0].description;
-
-      const markUp = `<img src="${catImageUrl}" height=400 width="600"/>
-         <h2 class="cats-name">${catName}</h2> <p>${catDescr}</p>`;
-
-      refs.catInfoEl.innerHTML = markUp;
-    } else {
-      throw new Error("Кот не найден");
+function renderCatsBreedsList(cats) {
+    let catsList;
+    for (let i = 0; i < cats.length; i++) {
+       catsList += getCatBreed(cats[i]);        
     }
-    hideLoader();
-  })
-    .catch((err) => {
-      showError(err.message);
-      hideLoader();
+    return catsList;
+}
+
+function addCats() {
+    fetchBreeds().then(cats => {
+ 
+        refs.catBreedsEl.innerHTML = renderCatsBreedsList(cats);
+        new SlimSelect({
+            select: '#single'
+        });
+        refs.catSlimSelectWrapper = document.querySelector('.ss-main.breed-select');
+    }).catch(() => {
+        refs.catBreedsEl.classList.add('js-hidden');
+        refs.catSlimSelectWrapper.classList.add('js-hidden');
+        refs.loader.classList.add('js-hidden');
+        refs.error = document.querySelector('.js-hidden');
+        Notiflix.Notify.failure(refs.error.classList.remove('js-hidden'));  
+    });
+}
+addCats();
+
+
+function getCatCard(breed, url) {
+    return `<img class="cat" id=${breed.id}
+        src=${url}
+        alt=${breed.alt_names}
+        height=300
+      />
+      <h1 class="cat-name">${breed.name}</h1>
+      <p class="cat-description">
+  ${breed.description}
+      </p>
+      <p class="cat-temp">
+        <span class="temperament">Temperament: </span>${breed.temperament}
+      </p>`;
+}
+
+refs.catBreedsEl.addEventListener('change', oncatBreedsElChange);
+
+function oncatBreedsElChange(event) {
+    const breedId = event.target.value;
+    refs.catBreedsEl.classList.add('js-hidden');
+    refs.catSlimSelectWrapper.classList.add('js-hidden');
+    refs.loader.classList.remove('js-hidden');
+    
+    fetchCatByBreed(breedId).then(catData => {
+        refs.catInfoWrapper.innerHTML = getCatCard(catData[0].breeds[0], catData[0].url);
+        refs.loader.classList.add('js-hidden');
+        refs.catBreedsEl.classList.remove('js-hidden');
+        refs.catSlimSelectWrapper.classList.remove('js-hidden');
+    }).catch(() => {
+        refs.catBreedsEl.classList.add('js-hidden');
+        refs.catSlimSelectWrapper.classList.add('js-hidden');
+        refs.loader.classList.add('js-hidden');
+        Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!'); 
+    
     });
 };
-
-refs.selectEl.addEventListener("change", onSelectElChange);
-
-
-
-
 
